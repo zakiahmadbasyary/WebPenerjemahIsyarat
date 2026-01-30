@@ -1,46 +1,33 @@
 import streamlit as st
 import cv2
-from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
-st.set_page_config(page_title="Deteksi Bahasa Isyarat", layout="wide")
-st.title("Deteksi Bahasa Isyarat (Realtime Kamera)")
+st.set_page_config(page_title="Tes Kamera WebRTC", layout="wide")
+st.title("Tes Kamera WebRTC (Tanpa YOLO)")
 
-# ===============================
-# LOAD MODEL
-# ===============================
-MODEL_PATH = "model/best.pt"
-model = YOLO(MODEL_PATH)
-
-# ===============================
-# VIDEO PROCESSOR
-# ===============================
 class VideoProcessor(VideoProcessorBase):
-    def __init__(self):
-        self.frame_count = 0
-
     def recv(self, frame):
+        # Ambil frame dari browser
         img = frame.to_ndarray(format="bgr24")
 
-        # OPTIONAL: resize biar FPS naik
+        # Resize biar ringan
         img = cv2.resize(img, (480, 360))
 
-        # Skip frame (optimasi FPS)
-        self.frame_count += 1
-        if self.frame_count % 2 != 0:
-            return img
+        # Tambah teks biar kelihatan real-time
+        cv2.putText(
+            img,
+            "WEBRTC TEST - LIVE",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
+        )
 
-        # YOLO inference
-        results = model(img, conf=0.5)
-        annotated_frame = results[0].plot()
+        return img
 
-        return annotated_frame
-
-# ===============================
-# WEBRTC STREAM
-# ===============================
 webrtc_streamer(
-    key="sibi-realtime",
+    key="test-webrtc",
     video_processor_factory=VideoProcessor,
     media_stream_constraints={
         "video": True,
